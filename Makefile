@@ -9,8 +9,8 @@ DailyPaper_PRIVATE_FRAMEWORKS = PersistentConnection PhotoLibrary SpringBoardFou
 DailyPaper_EXTRA_FRAMEWORKS = Cephei
 
 include $(THEOS_MAKE_PATH)/tweak.mk
+SUBPROJECTS = prefs
 
-SUBPROJECTS += prefs weeapp
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
 after-install::
