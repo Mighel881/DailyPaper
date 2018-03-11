@@ -1,4 +1,5 @@
 #import "Global.h"
+#import "HBDPPreferences.h"
 #import "HBDPXMLParserHell.h"
 
 #import <Foundation/NSDistributedNotificationCenter.h>
@@ -7,6 +8,8 @@
 #import <SpringBoard/SpringBoard.h>
 #import <SpringBoard/SBWiFiManager.h>
 #import <SpringBoardFoundation/SBFWallpaperParallaxSettings.h>
+
+HBDPPreferences *preferences;
 
 static NSString *const HBDPErrorDomain = @"HBDPErrorDomain";
 
@@ -228,30 +231,11 @@ void HBDPSaveWallpaper() {
 
 %end
 
-#pragma mark - Preferences
-
-void HBDPLoadPrefs() {
-	NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:kHBDPPrefsPath];
-
-	enabled = GET_BOOL(kHBDPEnabledKey, YES);
-	useWiFiOnly = GET_BOOL(kHBDPUseWiFiOnlyKey, NO);
-	useRetina = GET_BOOL(kHBDPUseRetinaKey, !IS_IPAD);
-	region = GET_INT(kHBDPRegionKey, HBDPBingRegionWorldwide);
-	wallpaperMode = GET_INT(kHBDPWallpaperModeKey, PLWallpaperModeBoth);
-
-	if (!prefs) {
-		isFirstRun = YES;
-		%init(FirstRun);
-
-		[@{} writeToFile:kHBDPPrefsPath atomically:YES];
-	}
-}
-
 %ctor {
-	%init;
-	HBDPLoadPrefs();
+    preferences = [HBDPPreferences mainPreferences];
 
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)HBDPLoadPrefs, CFSTR("ws.hbang.dailypaper/ReloadPrefs"), NULL, kNilOptions);
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)HBDPUpdateWallpaperOnDemand, CFSTR("ws.hbang.dailypaper/ForceUpdate"), NULL, kNilOptions);
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)HBDPSaveWallpaper, CFSTR("ws.hbang.dailypaper/SaveWallpaper"), NULL, kNilOptions);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)HBDPUpdateWallpaperOnDemand, CFSTR("ws.hbang.dailypaper/ForceUpdate"), NULL, kNilOptions);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)HBDPSaveWallpaper, CFSTR("ws.hbang.dailypaper/SaveWallpaper"), NULL, kNilOptions);
+
+    %init;
 }
