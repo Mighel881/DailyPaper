@@ -5,7 +5,8 @@ DailyPaper_FILES = $(wildcard *.m)
 DailyPaper_INSTALL_PATH = /Library/PreferenceBundles
 DailyPaper_FRAMEWORKS = UIKit
 DailyPaper_PRIVATE_FRAMEWORKS = Preferences
-DailyPaper_EXTRA_FRAMEWORKS = CepheiPrefs
+DailyPaper_EXTRA_FRAMEWORKS = Cephei CepheiPrefs
+DailyPaper_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

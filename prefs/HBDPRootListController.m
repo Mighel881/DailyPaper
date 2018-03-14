@@ -1,5 +1,6 @@
 #import "Global.h"
 #import "HBDPRootListController.h"
+#import <CepheiPrefs/HBAppearanceSettings.h>
 #import <Foundation/NSDistributedNotificationCenter.h>
 #import <Preferences/PSSpecifier.h>
 #import <Preferences/PSTableCell.h>
@@ -13,30 +14,35 @@ static NSString *const kHBDPSaveWallpaperIdentifier = @"SaveWallpaper";
 #pragma mark - Constants
 
 + (NSString *)hb_shareText {
-	return [NSString stringWithFormat:@"I’m using DailyPaper to enjoy a different wallpaper on my %@ every day!", [UIDevice currentDevice].localizedModel];
+    return [NSString stringWithFormat:@"I’m using DailyPaper to enjoy a different wallpaper on my %@ every day!", [UIDevice currentDevice].localizedModel];
 }
 
 + (NSURL *)hb_shareURL {
-	return [NSURL URLWithString:@"http://hbang.ws/dailypaper"];
+    return [NSURL URLWithString:@"http://hbang.ws/dailypaper"];
 }
 
-+ (UIColor *)hb_tintColor {
-	return [UIColor colorWithRed:241.f / 255.f green:148.f / 255.f blue:0 alpha:1];
++ (NSString *)hb_specifierPlist {
+    return @"Root";
 }
 
 #pragma mark - UIViewController
 
 - (instancetype)init {
-	self = [super init];
+    self = [super init];
+    if (self) {
+        [[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperDidUpdate:) name:HBDPWallpaperDidUpdateNotification object:nil];
+        [[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperDidSave:) name:HBDPWallpaperDidSaveNotification object:nil];
+    }
 
-	if (self) {
-		_specifiers = [[self loadSpecifiersFromPlistName:@"Root" target:self] retain];
+    return self;
+}
 
-		[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperDidUpdate:) name:HBDPWallpaperDidUpdateNotification object:nil];
-		[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(wallpaperDidSave:) name:HBDPWallpaperDidSaveNotification object:nil];
-	}
+- (void)viewDidLoad  {
+    [super viewDidLoad];
 
-	return self;
+    HBAppearanceSettings *appearanceSettings = [[HBAppearanceSettings alloc] init];
+    appearanceSettings.tintColor = [UIColor colorWithRed:241.f / 255.f green:148.f / 255.f blue:0 alpha:1];
+    self.hb_appearanceSettings = appearanceSettings;
 }
 
 #pragma mark - Actions
@@ -69,20 +75,23 @@ static NSString *const kHBDPSaveWallpaperIdentifier = @"SaveWallpaper";
 }
 
 - (void)_callbackReturnedWithError:(NSError *)error forIdentifier:(NSString *)identifier {
-	PSTableCell *cell = [self cachedCellForSpecifierID:identifier];
-	cell.cellEnabled = YES;
+    PSTableCell *cell = [self cachedCellForSpecifierID:identifier];
+    cell.cellEnabled = YES;
 
-	if (error) {
-		UIAlertView *alertView = [[[UIAlertView alloc] initWithTitle:@"Couldn’t download your wallpaper because an error occurred." message:[NSString stringWithFormat:@"%@\nMake sure you’re connected to the Internet and try again in a few minutes.", error.localizedDescription] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
-		[alertView performSelector:@selector(show) withObject:nil afterDelay:0.1];
-	}
+    if (error) {
+        NSString *message = [NSString stringWithFormat:@"%@\nMake sure you’re connected to the Internet and try again in a few minutes.", error.localizedDescription];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Couldn’t download your wallpaper because an error occurred." message:message preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil];
+
+        [alert addAction:cancelAction];
+        [self presentViewController:alert animated:YES completion:nil];
+    }
 }
 
 #pragma mark - Memory management
 
 - (void)dealloc {
-	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
-	[super dealloc];
+    [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 }
 
 @end

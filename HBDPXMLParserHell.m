@@ -62,11 +62,7 @@
 		});
 
 		[_parser abortParsing];
-		[_parser release];
 	}
-
-	[_currentElement release];
-	[_currentString release];
 }
 
 - (void)parser:(NSXMLParser *)parser parseErrorOccurred:(NSError *)parseError {
@@ -77,19 +73,6 @@
 	dispatch_async(dispatch_get_main_queue(), ^{
 		_completion(nil, nil, parseError);
 	});
-}
-
-#pragma mark - Memory management
-
-- (void)dealloc {
-	[_parser release];
-	[_currentElement release];
-	[_currentString release];
-	[_copyright release];
-	[_copyrightURL release];
-	[_completion release];
-
-	[super dealloc];
 }
 
 @end

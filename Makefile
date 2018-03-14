@@ -13,7 +13,7 @@ DailyPaper_FILES = $(wildcard *.x) $(wildcard *.m)
 DailyPaper_FRAMEWORKS = UIKit CoreGraphics
 DailyPaper_PRIVATE_FRAMEWORKS = PersistentConnection PhotoLibrary SpringBoardFoundation
 DailyPaper_EXTRA_FRAMEWORKS = Cephei
-DailyPaper_CFLAGS = -include Global.h -fobjc-arc
+DailyPaper_CFLAGS = -include Global.h -fobjc-arc -Wno-deprecated-declarations
 
 SUBPROJECTS = prefs
 

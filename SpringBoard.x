@@ -28,13 +28,14 @@ UIImage *HBDPRetrieveWallpaperWithSize(CGSize screenSize, NSError **error) {
 	if (CGSizeEqualToSize(screenSize, CGSizeZero)) {
 		screenSize = [SBFWallpaperParallaxSettings minimumWallpaperSizeForCurrentDevice];
 
-		if (useRetina && [UIScreen mainScreen].scale > 1.0) {
+		if (preferences.useRetina && [UIScreen mainScreen].scale > 1.0) {
 			screenSize.width *= [UIScreen mainScreen].scale;
 			screenSize.height *= [UIScreen mainScreen].scale;
 		}
 	}
 
-	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.bing.com/ImageResolution.aspx?w=%li&h=%li&mkt=%@", (long)screenSize.width, (long)screenSize.height, HBDPBingRegionToMarket(region)]];
+  // https://www.bing.com/ImageResolution.aspx?w=375&h=667&mkt=en-us
+	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://www.bing.com/ImageResolution.aspx?w=%li&h=%li&mkt=%@", (long)screenSize.width, (long)screenSize.height, HBDPBingRegionToMarket(preferences.region)]];
 	NSError *requestError = nil;
 	NSData *data = [NSURLConnection sendSynchronousRequest:[NSURLRequest requestWithURL:url] returningResponse:nil error:&requestError];
 
@@ -55,12 +56,12 @@ void HBDPUpdateWallpaper(void(^completion)(NSError *error), BOOL onDemand) {
 	[(SpringBoard *)[UIApplication sharedApplication] _dailypaper_configureTimer];
 
 	if (!onDemand) {
-		if (!enabled) {
+		if (!preferences.enabled) {
 			completion([NSError errorWithDomain:HBDPErrorDomain code:1 userInfo:@{ NSLocalizedDescriptionKey: @"Wallpaper updating is disabled." }]);
 			return;
 		}
 
-		if (useWiFiOnly) {
+		if (preferences.useWiFiOnly) {
 			BOOL failed = NO;
 
 			if (isWaitingForWiFi) {
@@ -89,12 +90,13 @@ void HBDPUpdateWallpaper(void(^completion)(NSError *error), BOOL onDemand) {
 			return;
 		}
 
-		PLStaticWallpaperImageViewController *wallpaperViewController = [[[PLStaticWallpaperImageViewController alloc] initWithUIImage:image] autorelease];
+		PLStaticWallpaperImageViewController *wallpaperViewController = [[PLStaticWallpaperImageViewController alloc] initWithUIImage:image];
 		wallpaperViewController.saveWallpaperData = YES;
 
-		uintptr_t address = (uintptr_t)&wallpaperMode;
+/* Just trynna compile RN
+		uintptr_t address = (uintptr_t)&preferences.wallpaperMode;
 		object_setInstanceVariable(wallpaperViewController, "_wallpaperMode", *(PLWallpaperMode **)address);
-
+*/
 		[wallpaperViewController _savePhoto];
 
 		isRunning = NO;
@@ -118,7 +120,7 @@ void HBDPUpdateWallpaperOnDemand() {
 void HBDPUpdateWallpaperMetadata() {
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
 		HBDPXMLParserHell *parser = [[HBDPXMLParserHell alloc] init];
-		[parser loadWithBingMarket:HBDPBingRegionToMarket(region) completion:^(NSString *copyright, NSURL *url, NSError *error) {
+		[parser loadWithBingMarket:HBDPBingRegionToMarket(preferences.region) completion:^(NSString *copyright, NSURL *url, NSError *error) {
 			if (error) {
 				HBLogError(@"failed to load metadata: %@", error);
 			}
@@ -155,16 +157,16 @@ void HBDPSaveWallpaper() {
 
 %new - (void)_dailypaper_configureTimer {
 	NSCalendar *calendar = [NSCalendar autoupdatingCurrentCalendar];
-	calendar.timeZone = HBDPBingRegionToTimezone(region);
+	calendar.timeZone = HBDPBingRegionToTimezone(preferences.region);
 
-	NSDateComponents *dateComponents = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit fromDate:[NSDate date]];
+	NSDateComponents *dateComponents = [calendar components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond fromDate:[NSDate date]];
 	dateComponents.day++;
 	dateComponents.hour = 0;
 	dateComponents.minute = arc4random_uniform(3); // let's not ddos bing
 	dateComponents.second = arc4random_uniform(61);
 	HBLogDebug(@"scheduling next update for %@", [calendar dateFromComponents:dateComponents]);
 
-	PCPersistentTimer *timer = [[[PCPersistentTimer alloc] initWithFireDate:[calendar dateFromComponents:dateComponents] serviceIdentifier:@"ws.hbang.dailypaper" target:self selector:@selector(_dailypaper_updateWallpaper) userInfo:nil] autorelease];
+	PCPersistentTimer *timer = [[PCPersistentTimer alloc] initWithFireDate:[calendar dateFromComponents:dateComponents] serviceIdentifier:@"ws.hbang.dailypaper" target:self selector:@selector(_dailypaper_updateWallpaper) userInfo:nil];
 	[timer scheduleInRunLoop:[NSRunLoop mainRunLoop]];
 }
 
@@ -200,8 +202,6 @@ void HBDPSaveWallpaper() {
 
 #pragma mark - First run
 
-%group FirstRun
-
 %hook SBLockScreenManager
 
 - (void)_finishUIUnlockFromSource:(NSInteger)source withOptions:(NSDictionary *)options {
@@ -222,8 +222,6 @@ void HBDPSaveWallpaper() {
 		[[UIApplication sharedApplication] openURL:url];
 	}
 }
-
-%end
 
 %end
 

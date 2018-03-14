@@ -33,10 +33,6 @@ static NSString *const kHBDPWallpaperModeKey = @"WallpaperMode";
 static NSString *const kHBDPDescriptionKey = @"Description";
 static NSString *const kHBDPURLKey = @"URL";
 
-#define GET_BOOL(key, default) (prefs[key] ? ((NSNumber *)prefs[key]).boolValue : default)
-#define GET_FLOAT(key, default) (prefs[key] ? ((NSNumber *)prefs[key]).floatValue : default)
-#define GET_INT(key, default) (prefs[key] ? ((NSNumber *)prefs[key]).intValue : default)
-
 #ifndef DAILYPAPER_GLOBAL_M
 __BEGIN_DECLS
 
