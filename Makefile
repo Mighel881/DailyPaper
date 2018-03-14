@@ -1,15 +1,15 @@
-export TARGET = iphone:10.1
+export TARGET = iphone:11.2:9.0
 
 INSTALL_TARGET_PROCESSES = Preferences
 
 ifneq ($(RESPRING),0)
-		INSTALL_TARGET_PROCESSES += SpringBoard
+    INSTALL_TARGET_PROCESSES += SpringBoard
 endif
 
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = DailyPaper
-DailyPaper_FILES = $(wildcard *.xm) $(wildcard *.x) $(wildcard *.m)
+DailyPaper_FILES = $(wildcard *.x) $(wildcard *.m)
 DailyPaper_FRAMEWORKS = UIKit CoreGraphics
 DailyPaper_PRIVATE_FRAMEWORKS = PersistentConnection PhotoLibrary SpringBoardFoundation
 DailyPaper_EXTRA_FRAMEWORKS = Cephei

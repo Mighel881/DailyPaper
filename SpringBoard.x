@@ -15,10 +15,6 @@ static NSString *const HBDPErrorDomain = @"HBDPErrorDomain";
 
 void HBDPUpdateWallpaperMetadata();
 
-BOOL enabled, useRetina, useWiFiOnly;
-HBDPBingRegion region;
-PLWallpaperMode wallpaperMode;
-
 BOOL isRunning, isWaitingForWiFi, isFirstRun;
 
 @interface SpringBoard (DailyPaper)
